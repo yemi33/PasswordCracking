@@ -1,0 +1,18 @@
+Rebecca Fox and Yemi Shin
+
+Part 1
+Passwords cracked: [number cracked]
+Total time: [user time from a "time" command]
+Number of hashes computed: 71691669009 
+Passwords cracked per number of hashes computed: [passwords per hash]
+Time per password cracked: [seconds per password]
+
+Part 2
+Passwords cracked: [number cracked]
+Total time: [user time from a "time" command]
+Number of hashes computed: 71691669009 
+Passwords cracked per number of hashes computed: [passwords per hash]
+Time per password cracked: [seconds per password]
+
+Factor by which your time per password lengthened, and why.
+[number and explanation]
