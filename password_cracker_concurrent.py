@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import hashlib
 import binascii
+import concurrent.futures
 
 class PasswordCracker:
   def __init__(self, wordFile, passwordFile, mode = "single"):
@@ -26,10 +27,8 @@ class PasswordCracker:
     
     return hashes
 
-  def calculateDoubleWordHashes(self):
-    hashes = dict()
-    for password1 in self.words:
-      for password2 in self.words:
+  def calculateDoubleWordHashesHelper(self, password1, hashes):
+    for password2 in self.words:
         password = password1 + password2
         encodedPassword = password.encode('utf-8')
         md5 = hashlib.md5(encodedPassword)
@@ -39,6 +38,16 @@ class PasswordCracker:
         if passwordHashAsHexString in self.passwordHashes:
           hashes[passwordHashAsHexString] = password
 
+  def calculateDoubleWordHashes(self):
+    hashes = dict()
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+      print("here")
+      futures = []
+      for password1 in self.words:
+        futures.append(executor.submit(calculateDoubleWordHashesHelper, self=self, password1=password1, hashes=hashes))
+      for future in concurrent.futures.as_completed(futures):
+        print("completed")
+  
     return hashes
 
   def crackPassword(self):
@@ -81,10 +90,8 @@ class SaltedPasswordCracker:
 
     return None
 
-  def matchHashDouble(self, salt, hash):
-    #two words passwords
-    for password1 in self.words:
-      for password2 in self.words:
+  def matchHashDoubleHelper(self, salt, hash, password1):
+    for password2 in self.words:
         origPassword = password1 + password2
         password = salt + password1 + password2
         encodedPassword = password.encode('utf-8')
@@ -98,6 +105,18 @@ class SaltedPasswordCracker:
 
     return None
 
+  def matchHashDouble(self, salt, hash):
+    #two words passwords
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+      futures = []
+      for password1 in self.words:
+        futures.append(executor.submit(matchHashDoubleHelper,salt=salt, hash=hash, password1=password1))
+      for future in concurrent.futures.as_completed(futures):
+        # if any of the threads find the matching pw, return that
+        if future.result() != None:
+          return future.result()
+      return None
+
   def crackPassword(self):
     input = open(self.passwordFile).read().split("\n")
     output = open("passwords2_cracked.txt", "a")
@@ -105,23 +124,19 @@ class SaltedPasswordCracker:
     for line in input:
       splitString = line.split(":")
       username = splitString[0]
-      try:
-        secondSplitString = splitString[1].split("$")
-        salt = secondSplitString[0]
-        saltedPasswordHash = secondSplitString[1]
-      except:
-        continue
+      salt = splitString[1].split("$")[0]
+      saltedPasswordHash = splitString[1].split("$")[1]
       password = ""
       # if the mode is "single", then use the matchHashSingle Method
       if self.mode == "single":
-        password = self.matchHashSingle(salt, saltedPasswordHash)
-        if password != None:
+        if self.matchHashSingle(salt, saltedPasswordHash) != None:
+          password = self.matchHashSingle(salt, saltedPasswordHash)
           output.write(f"{username}:{password}\n")
           numCracked += 1
       # if the mode is "double", then use the matchHashDouble method
       else:
-        password = self.matchHashDouble(salt, saltedPasswordHash)
-        if password != None:
+        if self.matchHashDouble(salt, saltedPasswordHash) != None:
+          password = self.matchHashDouble(salt, saltedPasswordHash)
           output.write(f"{username}:{password}\n")
           numCracked += 1
     
@@ -129,7 +144,7 @@ class SaltedPasswordCracker:
     
 if __name__ == "__main__":
   '''
-  To be time efficient, separating single word pws from double word pws (the latter is the bottleneck. (O(n^2) where n is the length of words.txt))
+  To be time efficient, separating single word pws from double word pws (the latter is the bottleneck.)
   '''
 
   '''
@@ -145,7 +160,7 @@ if __name__ == "__main__":
   Time Results for Part 1, only calculating single word PWs:
   real    0m1.110s
   user    0m0.765s
-  sys     0m0.062s
+  sys 0m0.062s
 
   267751 hashes were calculated in 0.765s
   which means
@@ -162,43 +177,17 @@ if __name__ == "__main__":
   wtf
   '''
 
-  # # just checking double word passwords
-  # passwordCracker = PasswordCracker("words.txt", "passwords1.txt", mode = "double")
-  # result = passwordCracker.crackPassword()
-  # print(result) 
-  # print(passwordCracker.numHashesComputed)
+  # just checking double word passwords
+  passwordCracker = PasswordCracker("words.txt", "passwords1.txt", mode = "double")
+  result = passwordCracker.crackPassword()
+  print(result) 
+  print(passwordCracker.numHashesComputed)
 
   '''
   PART 2: Salted PWs
   '''
 
-  # just checking single word passwords
-  saltedPasswordCracker = SaltedPasswordCracker("words.txt", "passwords2.txt")
-  result2 = saltedPasswordCracker.crackPassword()
-  print(result2) # 1133
-  print(saltedPasswordCracker.numHashesComputed) # 466049067
-
-  '''
-  Time Results for Part 2, only calculating single word PWs:
-  real    19m18.601s
-  user    18m47.653s
-  sys     0m15.026
-
-  466049067 hashes were calculated in 18m47s = 1127s
-  which means
-  413530 hashes / second 
-
-  now to calculate all double word pws
-  7.16 * 10^10 hashes (worst case for each line in passwords2.txt)
-  there are 2326 lines in passwords2.txt
-  which makes the worst case number of hashes we need to calculate
-  1.66 * 10^14 hashes
-  which will take
-  ~ 402731604 seconds
-  ~ 6712193 mins
-  ~ 111869 hrs
-  ~ 4661 days
-  ~ 12.8 years
-
-  yeepee
-  '''
+  # saltedPasswordCracker = SaltedPasswordCracker("words.txt", "passwords2.txt")
+  # result2 = saltedPasswordCracker.crackPassword()
+  # print(result2)
+  # print(saltedPasswordCracker.numHashesComputed)

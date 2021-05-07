@@ -1,18 +1,23 @@
 Rebecca Fox and Yemi Shin
 
+Note to Jeff: Total time here refers to actual time recorded (for single word passwords) + estimated time (for double word passwords)
+
+Link to Our Code: 
+https://replit.com/@yemi33/PasswordCracking#password_cracker.py
+
 Part 1
-Passwords cracked: [number cracked]
-Total time: [user time from a "time" command]
+Passwords cracked: 1162 passwords (single word passwords) 
+Total time: 204829.69 seconds (0.765s for single word passwords)
 Number of hashes computed: 71691669009 
-Passwords cracked per number of hashes computed: [passwords per hash]
-Time per password cracked: [seconds per password]
+Passwords cracked per number of hashes computed: 0.000000016208299 passwords/hash
+Time per password cracked: 0.00065834767642 seconds/password
 
 Part 2
-Passwords cracked: [number cracked]
-Total time: [user time from a "time" command]
-Number of hashes computed: 71691669009 
-Passwords cracked per number of hashes computed: [passwords per hash]
-Time per password cracked: [seconds per password]
+Passwords cracked: 1133 passwords (single word passwords)
+Total time: 12.8 years, 18 minutes and 47 seconds approximately (18m47.653s just for single word passwords) lol
+Number of hashes computed: 466049067 (for single word passwords)
+Passwords cracked per number of hashes computed: 0.000002431074495 passwords/hash
+Time per password cracked: 0.995280670785525 seconds/password
 
-Factor by which your time per password lengthened, and why.
-[number and explanation]
+Factor by which your time per password lengthened, and why: 
+The time per password lengthened by a factor of 1511. This is because the password cracker cannot just look up the hash in a dictionary of the hashed versions of all possible passwords. Instead, it must isolate the salt and then calculate all possible hashes for every single password each time it wants to crack a single password. We get it now. Cracking salted passwords is awfully hard when done linearly.
